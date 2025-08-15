@@ -15,6 +15,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 // Import routes
 import tasksRouter from './routes/tasks.js';
 import authRouter from './routes/auth.js';
+import waterReminderRouter, { initializeWaterReminders } from './routes/waterReminder.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,12 +33,15 @@ mongoose.connect(mongoUrl)
 // Routes
 app.use('/api/tasks', tasksRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/water-reminder', waterReminderRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
+  // Initialize water reminders after server starts
+  await initializeWaterReminders();
 });
