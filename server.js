@@ -30,11 +30,11 @@ mongoose.connect(mongoUrl)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/tasks', tasksRouter);
-app.use('/api/auth', authRouter);
+app.use('api/tasks', tasksRouter);
+app.use('api/auth', authRouter);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('api/health', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
