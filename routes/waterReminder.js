@@ -1,25 +1,22 @@
 import express from 'express';
 import WaterReminder from '../models/WaterReminder.js';
 import auth from '../middleware/auth.js';
+import { notificationService } from '../services/notificationService.js';
 
 const router = express.Router();
 
 // Store active intervals for each user
 const activeIntervals = new Map();
 
-// Helper function to send notification (in a real app, this would use push notifications)
-const sendWaterNotification = (userId, reminderCount) => {
-  console.log(`🚰 Water Reminder for user ${userId}: Time to drink water! (Reminder #${reminderCount} today)`);
-  // In a real application, you would integrate with:
-  // - Push notification service (Firebase, OneSignal, etc.)
-  // - WebSocket for real-time notifications
-  // - Email notifications
-  // For now, we'll just log it
-  return {
-    message: "Time to drink water! 💧",
-    timestamp: new Date(),
-    reminderCount: reminderCount
+// Enhanced notification function with multiple delivery methods
+const sendWaterNotification = async (userId, reminderCount) => {
+  const reminderData = {
+    reminderCount,
+    timestamp: new Date().toISOString(),
+    type: 'water-reminder'
   };
+  
+  return await notificationService.sendWaterReminder(userId, reminderData);
 };
 
 // Helper function to start interval for a user

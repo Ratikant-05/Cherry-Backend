@@ -4,6 +4,8 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { socketService } from './services/socketService.js';
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +18,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 import tasksRouter from './routes/tasks.js';
 import authRouter from './routes/auth.js';
 import waterReminderRouter, { initializeWaterReminders } from './routes/waterReminder.js';
+import pushRouter from './routes/push.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,14 +37,20 @@ mongoose.connect(mongoUrl)
 app.use('/api/tasks', tasksRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/water-reminder', waterReminderRouter);
+app.use('/api/push', pushRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
 
-app.listen(PORT, async () => {
+// Create HTTP server and initialize Socket.IO
+const server = createServer(app);
+socketService.initialize(server);
+
+server.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`WebSocket server initialized`);
   // Initialize water reminders after server starts
   await initializeWaterReminders();
 });
