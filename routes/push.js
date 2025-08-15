@@ -5,12 +5,16 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// Configure web-push with VAPID keys
-webpush.setVapidDetails(
-  'mailto:your-email@example.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+// Configure web-push with VAPID keys (only if keys are provided)
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:your-email@example.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} else {
+  console.log('Push notifications not configured - VAPID keys not set');
+}
 
 // Subscribe to push notifications
 router.post('/subscribe', auth, async (req, res) => {
@@ -48,6 +52,12 @@ router.post('/unsubscribe', auth, async (req, res) => {
 
 // Send push notification (internal use)
 export const sendPushNotification = async (userId, payload) => {
+  // Check if push notifications are configured
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+    console.log('Push notifications not configured, skipping push notification');
+    return false;
+  }
+
   try {
     const user = await User.findById(userId);
     if (!user || !user.pushSubscription) {

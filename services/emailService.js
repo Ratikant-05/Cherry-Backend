@@ -2,22 +2,32 @@ import nodemailer from 'nodemailer';
 
 class EmailService {
   constructor() {
-    this.transporter = null;
+    this.transport = null;
     this.initialize();
   }
 
   initialize() {
-    // Configure email transporter (using Gmail as example)
-    this.transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER, // Your email
-        pass: process.env.EMAIL_PASS  // App password
-      }
-    });
+    // Only initialize if email credentials are provided
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email service not configured - EMAIL_USER and EMAIL_PASS not set');
+      return;
+    }
+
+    try {
+      // Configure email transport (using Gmail as example)
+      this.transport = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER, // Your email
+          pass: process.env.EMAIL_PASS  // App password
+        }
+      });
+    } catch (error) {
+      console.error('Email service initialization failed:', error);
+    }
 
     // Alternative SMTP configuration
-    // this.transporter = nodemailer.createTransporter({
+    // this.transport = nodemailer.createTransport({
     //   host: process.env.SMTP_HOST,
     //   port: process.env.SMTP_PORT,
     //   secure: false,
@@ -29,6 +39,11 @@ class EmailService {
   }
 
   async sendWaterReminder(userEmail, userName, reminderCount) {
+    if (!this.transport) {
+      console.log('Email service not configured, skipping email notification');
+      return false;
+    }
+
     try {
       const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -73,7 +88,7 @@ class EmailService {
         `
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
+      const result = await this.transport.sendMail(mailOptions);
       console.log(`Water reminder email sent to ${userEmail}:`, result.messageId);
       return result;
     } catch (error) {
@@ -83,8 +98,13 @@ class EmailService {
   }
 
   async testConnection() {
+    if (!this.transport) {
+      console.log('Email service not configured');
+      return false;
+    }
+
     try {
-      await this.transporter.verify();
+      await this.transport.verify();
       console.log('Email service connected successfully');
       return true;
     } catch (error) {
