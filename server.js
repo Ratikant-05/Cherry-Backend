@@ -24,12 +24,40 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://cherry-frontend-xtvi.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+}));
 app.use(express.json());
 
-mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+// MongoDB connection with better error handling
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      console.error('MONGODB_URI environment variable is not defined');
+      process.exit(1);
+    }
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error.message);
+    process.exit(1);
+  }
+};
+
+connectDB();
 
 // Routes
 app.use('/api/tasks', tasksRouter);
@@ -41,6 +69,9 @@ app.use('/api/push', pushRouter);
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!' });
 });
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Create HTTP server and initialize Socket.IO
 const server = createServer(app);
