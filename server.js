@@ -18,6 +18,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 import tasksRouter from './routes/tasks.js';
 import authRouter from './routes/auth.js';
 import waterReminderRouter, { initializeWaterReminders } from './routes/waterReminder.js';
+import activityLogRouter from './routes/activityLog.js';
 import pushRouter from './routes/push.js';
 
 const app = express();
@@ -63,6 +64,7 @@ connectDB();
 app.use('/api/tasks', tasksRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/water-reminder', waterReminderRouter);
+app.use('/api/activity-log', activityLogRouter);
 app.use('/api/push', pushRouter);
 
 // Health check endpoint
